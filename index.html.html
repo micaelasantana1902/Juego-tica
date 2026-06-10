@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>¿Docente ético o en falta?</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #FFF8F0; --purple: #7C5CBF; --purple-light: #EDE7F6;
+    --yellow: #FFD93D; --yellow-dark: #E6B800;
+    --green: #06C270; --green-bg: #E6FAF2;
+    --red: #E53E3E; --red-bg: #FFF0F0;
+    --text: #2D2040; --muted: #7A6B8A; --white: #FFFFFF; --border: #E8E0F0;
+  }
+  html, body { height: 100%; }
+  body {
+    background: var(--bg);
+    background-image: radial-gradient(circle at 15% 20%, #EDE7F6 0%, transparent 40%),
+                      radial-gradient(circle at 85% 80%, #FFF3CD 0%, transparent 35%);
+    font-family: 'Nunito', sans-serif;
+    color: var(--text);
+    min-height: 100vh;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    padding: 1rem;
+  }
+  .deco { position: fixed; pointer-events: none; z-index: 0; font-size: 22px; opacity: 0.15; }
+  .d1{top:6%;left:4%;} .d2{top:12%;right:6%;} .d3{bottom:20%;left:3%;} .d4{bottom:10%;right:5%;} .d5{top:40%;left:1%;}
+
+  .wrap { position: relative; z-index: 1; width: 100%; max-width: 560px; display: flex; flex-direction: column; gap: 0.6rem; }
+
+  .hero { text-align: center; }
+  .characters { font-size: 46px; margin-bottom: 2px; display: block; animation: bounce 2s infinite; }
+  @keyframes bounce { 0%,100%{transform:translateY(0);} 50%{transform:translateY(-6px);} }
+  .hero-badge { display: inline-block; background: var(--purple); color: #fff; font-size: 10px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; padding: 3px 12px; border-radius: 20px; margin-bottom: 6px; }
+  h1 { font-size: clamp(20px,4.5vw,32px); font-weight: 900; line-height: 1.15; margin-bottom: 4px; }
+  h1 .hl { color: var(--purple); background: var(--yellow); padding: 0 5px; border-radius: 5px; }
+  .subtitle { color: var(--muted); font-size: 13px; font-weight: 600; }
+
+  .score-banner { display: flex; align-items: center; justify-content: center; gap: 8px; background: var(--yellow); border-radius: 20px; padding: 5px 14px; font-size: 13px; font-weight: 800; color: var(--text); }
+  .score-banner button { background: rgba(255,255,255,0.6); border: none; border-radius: 20px; padding: 2px 10px; font-size: 13px; cursor: pointer; font-family: inherit; font-weight: 800; }
+
+  .progress-meta { display: flex; justify-content: space-between; font-size: 12px; font-weight: 700; color: var(--muted); margin-bottom: 5px; }
+  .progress-dots { display: flex; gap: 4px; }
+  .dot { flex: 1; height: 7px; border-radius: 4px; background: var(--border); transition: background 0.4s; cursor: pointer; }
+  .dot:hover { opacity: 0.75; }
+  .dot.done { background: var(--purple); }
+  .dot.current { background: var(--yellow-dark); }
+  .dot.correct-dot { background: var(--green); }
+  .dot.wrong-dot { background: var(--red); }
+
+  .card { background: var(--white); border-radius: 20px; padding: 1.25rem; box-shadow: 0 4px 16px rgba(124,92,191,0.10); border: 2px solid var(--border); }
+
+  .q-top { display: flex; align-items: center; gap: 8px; margin-bottom: 0.75rem; }
+  .q-num { background: var(--purple); color: #fff; font-size: 12px; font-weight: 800; width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .q-category { font-size: 11px; font-weight: 700; color: var(--purple); background: var(--purple-light); padding: 2px 10px; border-radius: 20px; }
+
+  /* TIMER BAR */
+  .timer-row { display: flex; align-items: center; gap: 8px; margin-bottom: 0.75rem; }
+  .timer-bar-wrap { flex: 1; height: 7px; background: var(--border); border-radius: 4px; overflow: hidden; }
+  .timer-bar { height: 100%; border-radius: 4px; background: var(--purple); transition: width 1s linear, background 0.5s; }
+  .timer-bar.warn { background: var(--yellow-dark); }
+  .timer-bar.danger { background: var(--red); }
+  .timer-label { font-size: 11px; font-weight: 800; color: var(--muted); min-width: 28px; text-align: right; }
+  .btn-pause { background: var(--purple-light); border: none; border-radius: 8px; padding: 3px 9px; font-size: 13px; cursor: pointer; font-family: inherit; font-weight: 800; color: var(--purple); flex-shrink: 0; }
+  .btn-pause:hover { background: var(--purple); color: #fff; }
+
+  .q-text { font-size: 15px; font-weight: 700; line-height: 1.5; color: var(--text); margin-bottom: 1rem; }
+
+  .btn-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 0.75rem; }
+  .btn-tf { padding: 12px 8px; border-radius: 14px; border: 2.5px solid var(--border); background: var(--white); color: var(--text); font-family: 'Nunito', sans-serif; font-size: 15px; font-weight: 800; cursor: pointer; transition: all 0.15s; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  .btn-tf .btn-icon { font-size: 22px; }
+  .btn-tf:hover:not(:disabled) { border-color: var(--purple); background: var(--purple-light); transform: translateY(-2px); }
+  .btn-tf:disabled { cursor: default; transform: none; }
+  .btn-tf.correct { background: var(--green-bg); border-color: var(--green); color: #065F3A; }
+  .btn-tf.wrong   { background: var(--red-bg);   border-color: var(--red);   color: #9B1C1C; }
+  .btn-tf.missed  { background: var(--green-bg); border-color: var(--green); color: #065F3A; opacity: 0.5; }
+
+  /* NAV ARROWS */
+  .nav-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.5rem; }
+  .btn-nav { background: var(--white); border: 2px solid var(--border); border-radius: 10px; padding: 6px 14px; font-size: 16px; cursor: pointer; font-family: inherit; font-weight: 800; color: var(--purple); transition: all 0.15s; }
+  .btn-nav:hover:not(:disabled) { background: var(--purple-light); border-color: var(--purple); }
+  .btn-nav:disabled { opacity: 0.3; cursor: default; }
+  .nav-hint { font-size: 11px; font-weight: 700; color: var(--muted); text-align: center; }
+
+  .feedback-area { display: none; border-radius: 14px; overflow: hidden; border: 2px solid; }
+  .feedback-area.ok  { border-color: #A7F3D0; }
+  .feedback-area.nok { border-color: #FCA5A5; }
+  .feedback-top { display: flex; align-items: flex-start; gap: 8px; padding: 10px 13px; font-size: 13px; font-weight: 700; line-height: 1.5; }
+  .feedback-top.ok  { background: var(--green-bg); color: #065F3A; }
+  .feedback-top.nok { background: var(--red-bg);   color: #9B1C1C; }
+  .fb-icon { font-size: 18px; flex-shrink: 0; margin-top: 1px; }
+  .sabias-que { background: #FFFBEA; border-top: 2px dashed #FFD93D; padding: 10px 13px; display: flex; gap: 8px; align-items: flex-start; }
+  .sq-icon { font-size: 16px; flex-shrink: 0; }
+  .sq-label { font-size: 10px; font-weight: 900; letter-spacing: 0.1em; text-transform: uppercase; color: #B8860B; margin-bottom: 2px; }
+  .sq-text { font-size: 12px; font-weight: 600; color: #5C4A00; line-height: 1.5; }
+
+  .overlay { display: none; position: fixed; inset: 0; z-index: 100; align-items: center; justify-content: center; background: rgba(255,248,240,0.85); }
+  .overlay.show { display: flex; }
+  .overlay-inner { text-align: center; animation: popIn 0.4s cubic-bezier(.34,1.56,.64,1); }
+  @keyframes popIn { from{transform:scale(0.5);opacity:0;} to{transform:scale(1);opacity:1;} }
+  .overlay-emoji { font-size: 72px; display: block; margin-bottom: 10px; }
+  .overlay-msg { font-size: 20px; font-weight: 900; color: var(--text); }
+
+  /* PAUSE SCREEN */
+  .pause-screen { display: none; position: fixed; inset: 0; z-index: 90; align-items: center; justify-content: center; background: rgba(255,248,240,0.96); flex-direction: column; gap: 16px; }
+  .pause-screen.show { display: flex; }
+  .pause-screen .p-emoji { font-size: 60px; }
+  .pause-screen .p-title { font-size: 22px; font-weight: 900; color: var(--text); }
+  .pause-screen .p-sub { font-size: 14px; font-weight: 600; color: var(--muted); }
+  .btn-resume { padding: 12px 32px; border-radius: 14px; background: var(--purple); color: #fff; border: none; font-family: inherit; font-size: 16px; font-weight: 800; cursor: pointer; }
+  .btn-resume:hover { background: #6244a8; }
+
+  .result { text-align: center; padding: 0.25rem 0; }
+  .result-char { font-size: 62px; margin-bottom: 6px; display: block; }
+  .result-title { font-size: 20px; font-weight: 900; margin-bottom: 6px; }
+  .result-msg { color: var(--muted); font-size: 13px; font-weight: 600; max-width: 360px; margin: 0 auto 1.25rem; line-height: 1.5; }
+  .stats-row { display: flex; justify-content: center; gap: 10px; margin-bottom: 1.5rem; }
+  .stat-card { border-radius: 12px; padding: 10px 16px; text-align: center; border: 2px solid; flex: 1; max-width: 120px; }
+  .stat-card.s-correct { background: var(--green-bg); border-color: #A7F3D0; }
+  .stat-card.s-wrong   { background: var(--red-bg);   border-color: #FCA5A5; }
+  .stat-card.s-pct     { background: var(--purple-light); border-color: #C4B5FD; }
+  .stat-val { font-size: 24px; font-weight: 900; line-height: 1; margin-bottom: 2px; }
+  .s-correct .stat-val { color: var(--green); }
+  .s-wrong   .stat-val { color: var(--red); }
+  .s-pct     .stat-val { color: var(--purple); }
+  .stat-lbl { font-size: 10px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; }
+  .btn-restart { padding: 11px 28px; border-radius: 12px; border: 2.5px solid var(--purple); background: var(--white); color: var(--purple); font-family: inherit; font-size: 15px; font-weight: 800; cursor: pointer; transition: all 0.15s; }
+  .btn-restart:hover { background: var(--purple); color: #fff; }
+
+  @media (max-width: 420px) {
+    .card { padding: 1rem; }
+    .btn-tf { padding: 10px 5px; font-size: 14px; }
+  }
+</style>
+</head>
+<body>
+
+<span class="deco d1">⭐</span><span class="deco d2">✨</span>
+<span class="deco d3">🌟</span><span class="deco d4">💫</span><span class="deco d5">⭐</span>
+
+<div class="overlay" id="overlay">
+  <div class="overlay-inner">
+    <span class="overlay-emoji" id="ov-emoji"></span>
+    <div class="overlay-msg" id="ov-msg"></div>
+  </div>
+</div>
+
+<div class="pause-screen" id="pause-screen">
+  <div class="p-emoji">⏸️</div>
+  <div class="p-title">Juego pausado</div>
+  <div class="p-sub">Tomate el tiempo que necesites.</div>
+  <button class="btn-resume" onclick="togglePause()">▶ Continuar</button>
+</div>
+
+<div class="wrap">
+
+  <div class="hero" id="hero">
+    <span class="characters">🧑‍🏫 🏫</span>
+    <div class="hero-badge">Juego educativo · Ética digital</div>
+    <h1>¿Docente ético<br>o <span class="hl">en falta?</span></h1>
+    <p class="subtitle">10 preguntas sobre tecnología, privacidad y respeto en el aula.</p>
+  </div>
+
+  <div class="score-banner" id="score-banner">
+    <span>⭐</span><span id="score-txt">Puntaje: 0 puntos</span>
+    <button onclick="toggleMusic()" id="music-btn">🔇 Música</button>
+  </div>
+
+  <div id="progress-wrap">
+    <div class="progress-meta">
+      <span id="q-counter">Pregunta 1 de 10</span>
+      <span id="pct-txt">10%</span>
+    </div>
+    <div class="progress-dots" id="dots"></div>
+  </div>
+
+  <div class="card" id="main-card">
+    <div class="q-top">
+      <div class="q-num" id="q-num">1</div>
+      <div class="q-category" id="q-cat"></div>
+    </div>
+
+    <div class="timer-row">
+      <div class="timer-bar-wrap"><div class="timer-bar" id="timer-bar"></div></div>
+      <div class="timer-label" id="timer-label">20s</div>
+      <button class="btn-pause" id="btn-pause" onclick="togglePause()">⏸ Pausar</button>
+    </div>
+
+    <div class="q-text" id="q-text"></div>
+
+    <div class="btn-row">
+      <button class="btn-tf" id="btn-v" onclick="check(true)"><span class="btn-icon">✅</span>Verdadero</button>
+      <button class="btn-tf" id="btn-f" onclick="check(false)"><span class="btn-icon">❌</span>Falso</button>
+    </div>
+
+    <div class="nav-row">
+      <button class="btn-nav" id="btn-prev" onclick="navigate(-1)">← Anterior</button>
+      <span class="nav-hint" id="nav-hint"></span>
+      <button class="btn-nav" id="btn-next" onclick="navigate(1)">Siguiente →</button>
+    </div>
+
+    <div class="feedback-area" id="feedback-area">
+      <div class="feedback-top" id="feedback-top"><span class="fb-icon" id="fb-icon"></span><span id="fb-text"></span></div>
+      <div class="sabias-que"><span class="sq-icon">💡</span><div><div class="sq-label">¿Sabías que...?</div><div class="sq-text" id="sq-text"></div></div></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const questions = [
+  { cat:"Privacidad", text:"Un docente puede publicar fotos de sus alumnos en redes sociales sin pedir permiso a las familias.", answer:false, feedback:"Publicar fotos de menores sin consentimiento viola su privacidad y las leyes de protección de datos.", sabiasQue:"En muchos países, fotografiar y publicar imágenes de menores sin el consentimiento de sus tutores es una infracción legal. Los docentes deben pedir autorización escrita antes de compartir cualquier imagen de sus estudiantes." },
+  { cat:"Derechos de autor", text:"Usar una imagen de Internet en una presentación educativa es siempre libre y gratuito porque es con fines pedagógicos.", answer:false, feedback:"El uso educativo no exime del respeto a los derechos de autor. Hay que revisar la licencia del recurso.", sabiasQue:"Existen buscadores de imágenes libres como Unsplash, Pixabay o la búsqueda de Google filtrada por licencia Creative Commons, donde podés encontrar recursos que sí se pueden usar libremente en clase." },
+  { cat:"Plataformas seguras", text:"Las plataformas para compartir materiales con estudiantes deben garantizar la seguridad y confidencialidad de sus datos.", answer:true, feedback:"¡Correcto! El docente debe elegir plataformas digitales seguras que protejan los datos de sus alumnos.", sabiasQue:"Plataformas como Google Classroom, Moodle o Microsoft Teams tienen políticas de privacidad educativas que protegen los datos de los menores. Antes de usar una app nueva en clase, conviene revisar su política de privacidad." },
+  { cat:"Derechos de autor", text:"Un docente actúa bien si cita la fuente de un recurso multimedia que usa en clase.", answer:true, feedback:"¡Correcto! Citar las fuentes respeta los derechos de autor y modela buenas prácticas para los estudiantes.", sabiasQue:"Citar las fuentes no solo es una obligación ética, también enseña a los alumnos a valorar el trabajo de otros. Podés usar formatos sencillos como: 'Imagen tomada de [sitio], bajo licencia [tipo]'." },
+  { cat:"Seguridad", text:"Compartir la contraseña de la plataforma educativa con un colega para que acceda a los datos del grupo no representa ningún riesgo.", answer:false, feedback:"Compartir contraseñas pone en riesgo la privacidad de los datos de los estudiantes y viola las normas de seguridad.", sabiasQue:"Cada docente debe tener sus propias credenciales de acceso. Compartir contraseñas dificulta rastrear quién hizo qué cambio y expone información sensible de los alumnos. Si un colega necesita acceso, lo correcto es solicitar que el administrador le cree una cuenta propia." },
+  { cat:"Convivencia digital", text:"El docente tiene la responsabilidad de promover el respeto y la buena convivencia también en los espacios digitales.", answer:true, feedback:"¡Correcto! El rol docente incluye prevenir el ciberacoso, la discriminación y las faltas de respeto en línea.", sabiasQue:"El ciberacoso afecta a 1 de cada 3 jóvenes. Los docentes pueden trabajar la netiqueta (normas de convivencia en internet) como contenido explícito en el aula, igual que se trabajan las normas de convivencia presencial." },
+  { cat:"Contenidos", text:"No se debe compartir un video con los alumnos si, aunque sea entretenido, no es acorde a los objetivos de la clase.", answer:true, feedback:"¡Correcto! Todo recurso utilizado en clase debe estar alineado con los objetivos de aprendizaje, sin importar cuán atractivo sea.", sabiasQue:"Antes de usar un recurso multimedia en clase, es útil hacerse tres preguntas: ¿Es confiable la fuente? ¿Es apropiado para la edad del grupo? ¿Ayuda a alcanzar el objetivo de aprendizaje? Si alguna respuesta es no, mejor buscar otro recurso." },
+  { cat:"Inclusión digital", text:"La inclusión digital implica que no todos los estudiantes tienen el mismo acceso a dispositivos o a Internet.", answer:true, feedback:"¡Correcto! El docente debe adaptar sus propuestas para que todos puedan participar sin importar sus posibilidades.", sabiasQue:"La brecha digital no solo es económica. También incluye diferencias en habilidades tecnológicas, tipos de dispositivos o calidad de la conexión. Una buena práctica es siempre ofrecer una alternativa sin necesidad de conectividad para que nadie quede afuera." },
+  { cat:"Fuentes confiables", text:"Un video puede obtenerse de cualquier sitio de Internet sin verificar su origen para usarlo en clase.", answer:false, feedback:"Es fundamental verificar que los contenidos sean de fuentes confiables antes de presentarlos en clase.", sabiasQue:"Para verificar si una fuente es confiable, podés preguntarte: ¿Quién publicó esto? ¿Tiene respaldo institucional o académico? ¿La información está actualizada? Herramientas como Snopes o la búsqueda inversa de imágenes ayudan a detectar contenidos falsos." },
+  { cat:"Ética digital", text:"Usar tecnología con ética en educación implica tanto saber usar las herramientas como ser responsable con su impacto en los estudiantes.", answer:true, feedback:"¡Correcto! La competencia digital docente combina el saber técnico con una actitud reflexiva e inclusiva.", sabiasQue:"La UNESCO define la competencia digital docente en 5 áreas: información, comunicación, creación de contenidos, seguridad y resolución de problemas. ¡La ética atraviesa todas ellas!" }
+];
+
+const TIMER_SECS = 20;
+let current = 0, score = 0;
+// state per question: null = not answered, true = correct, false = wrong
+let states = new Array(questions.length).fill(null);
+let timerVal = TIMER_SECS, timerInterval = null, paused = false, overlayActive = false;
+
+// ── TIMER ────────────────────────────────────────────────────────
+function startTimer() {
+  clearInterval(timerInterval);
+  timerVal = TIMER_SECS;
+  updateTimerUI();
+  timerInterval = setInterval(() => {
+    if (paused || overlayActive) return;
+    timerVal--;
+    updateTimerUI();
+    if (timerVal <= 0) { clearInterval(timerInterval); timeUp(); }
+  }, 1000);
+}
+
+function updateTimerUI() {
+  const bar = document.getElementById('timer-bar');
+  const lbl = document.getElementById('timer-label');
+  if (!bar || !lbl) return;
+  const pct = (timerVal / TIMER_SECS) * 100;
+  bar.style.width = pct + '%';
+  lbl.textContent = timerVal + 's';
+  bar.className = 'timer-bar' + (pct <= 25 ? ' danger' : pct <= 50 ? ' warn' : '');
+}
+
+function stopTimer() { clearInterval(timerInterval); }
+
+function timeUp() {
+  if (states[current] !== null) return;
+  // mark as wrong (no answer)
+  states[current] = false;
+  disableButtons();
+  showFeedback(false, false); // wrong, no answer chosen
+}
+
+// ── PAUSE ────────────────────────────────────────────────────────
+function togglePause() {
+  paused = !paused;
+  document.getElementById('pause-screen').classList.toggle('show', paused);
+  const btn = document.getElementById('btn-pause');
+  if (btn) btn.textContent = paused ? '▶ Reanudar' : '⏸ Pausar';
+}
+
+// ── DOTS ─────────────────────────────────────────────────────────
+function buildDots() {
+  const wrap = document.getElementById('dots');
+  wrap.innerHTML = '';
+  for (let i = 0; i < questions.length; i++) {
+    const d = document.createElement('div');
+    let cls = 'dot';
+    if (states[i] === true)  cls += ' correct-dot';
+    else if (states[i] === false) cls += ' wrong-dot';
+    else if (i < current) cls += ' done';
+    else if (i === current) cls += ' current';
+    d.className = cls;
+    d.title = `Pregunta ${i+1}`;
+    d.onclick = () => jumpTo(i);
+    wrap.appendChild(d);
+  }
+}
+
+// ── RENDER ───────────────────────────────────────────────────────
+function render() {
+  const q = questions[current];
+  document.getElementById('q-num').textContent = current + 1;
+  document.getElementById('q-cat').textContent = q.cat;
+  document.getElementById('q-text').textContent = q.text;
+  document.getElementById('q-counter').textContent = `Pregunta ${current+1} de ${questions.length}`;
+  document.getElementById('pct-txt').textContent = Math.round((current+1)/questions.length*100)+'%';
+  document.getElementById('score-txt').textContent = `Puntaje: ${score} punto${score!==1?'s':''}`;
+
+  // nav buttons
+  document.getElementById('btn-prev').disabled = current === 0;
+  document.getElementById('btn-next').disabled = current === questions.length - 1;
+  document.getElementById('nav-hint').textContent = states[current] !== null ? '(ya respondida)' : '';
+
+  buildDots();
+
+  // restore answer state
+  const bv = document.getElementById('btn-v');
+  const bf = document.getElementById('btn-f');
+  if (states[current] !== null) {
+    // already answered — show result without re-triggering timer
+    stopTimer();
+    document.getElementById('timer-bar').style.width = '0%';
+    document.getElementById('timer-label').textContent = '—';
+    document.getElementById('btn-pause').style.display = 'none';
+    disableButtons();
+    // figure out which button was pressed (we stored correct/wrong, not the chosen value)
+    // re-show feedback
+    showFeedback(states[current], true);
+  } else {
+    document.getElementById('feedback-area').style.display = 'none';
+    document.getElementById('btn-pause').style.display = '';
+    bv.className = 'btn-tf'; bv.disabled = false;
+    bf.className = 'btn-tf'; bf.disabled = false;
+    startTimer();
+  }
+}
+
+function disableButtons() {
+  document.getElementById('btn-v').disabled = true;
+  document.getElementById('btn-f').disabled = true;
+}
+
+// ── CHECK ────────────────────────────────────────────────────────
+function check(val) {
+  if (states[current] !== null) return;
+  stopTimer();
+  const correct = val === questions[current].answer;
+  states[current] = correct;
+  if (correct) score++;
+  document.getElementById('score-txt').textContent = `Puntaje: ${score} punto${score!==1?'s':''}`;
+  document.getElementById('btn-pause').style.display = 'none';
+  document.getElementById('timer-bar').style.width = '0%';
+  document.getElementById('timer-label').textContent = '—';
+
+  // style buttons
+  if (val === true) {
+    document.getElementById('btn-v').className = 'btn-tf ' + (correct?'correct':'wrong');
+    if (!correct) document.getElementById('btn-f').className = 'btn-tf missed';
+  } else {
+    document.getElementById('btn-f').className = 'btn-tf ' + (correct?'correct':'wrong');
+    if (!correct) document.getElementById('btn-v').className = 'btn-tf missed';
+  }
+  disableButtons();
+  showFeedback(correct, false);
+  buildDots();
+
+  setTimeout(() => {
+    showOverlay(correct, () => {
+      const next = current + 1;
+      if (next >= questions.length) {
+        // check if all answered
+        if (states.every(s => s !== null)) showResult();
+        else { current = next - 1; render(); } // stay or proceed
+      } else {
+        current = next;
+        render();
+      }
+    });
+  }, 6000);
+}
+
+function showFeedback(correct, silent) {
+  const q = questions[current];
+  const area = document.getElementById('feedback-area');
+  const top  = document.getElementById('feedback-top');
+  area.className = 'feedback-area ' + (correct?'ok':'nok');
+  top.className  = 'feedback-top '  + (correct?'ok':'nok');
+  document.getElementById('fb-icon').textContent = correct ? '🎉' : '🤔';
+  document.getElementById('fb-text').textContent = correct ? q.feedback : (silent ? q.feedback : '¡Se acabó el tiempo! ' + q.feedback);
+  document.getElementById('sq-text').textContent = q.sabiasQue;
+  area.style.display = 'block';
+}
+
+// ── NAVIGATE ─────────────────────────────────────────────────────
+function navigate(dir) {
+  const next = current + dir;
+  if (next < 0 || next >= questions.length) return;
+  stopTimer();
+  overlayActive = false;
+  current = next;
+  render();
+}
+
+function jumpTo(idx) {
+  if (idx === current) return;
+  stopTimer();
+  overlayActive = false;
+  current = idx;
+  render();
+}
+
+// ── OVERLAY ──────────────────────────────────────────────────────
+function showOverlay(correct, cb) {
+  overlayActive = true;
+  const ov = document.getElementById('overlay');
+  const msgs = correct
+    ? [['🌟','¡Excelente!'],['⭐','¡Muy bien!'],['🎯','¡Correcto!'],['🏅','¡Genial!']]
+    : [['💪','¡A seguir aprendiendo!'],['📚','¡Casi!'],['🤓','¡Buen intento!']];
+  const pick = msgs[Math.floor(Math.random()*msgs.length)];
+  document.getElementById('ov-emoji').textContent = pick[0];
+  document.getElementById('ov-msg').textContent = pick[1];
+  ov.classList.add('show');
+  setTimeout(() => { ov.classList.remove('show'); overlayActive = false; cb(); }, 1400);
+}
+
+// ── RESULT ───────────────────────────────────────────────────────
+function showResult() {
+  stopTimer();
+  document.getElementById('hero').style.display = 'none';
+  document.getElementById('progress-wrap').style.display = 'none';
+  document.getElementById('score-banner').style.display = 'none';
+  const pct = Math.round(score/questions.length*100);
+  let char, title, msg;
+  if (pct===100)    { char='🏆'; title='¡Perfecto! Sos un docente ético o alumno bien informado.'; msg='Dominás todos los conceptos de ética digital. ¡Seas docente o alumno, sos un ejemplo de ciudadanía digital responsable!'; }
+  else if (pct>=70) { char='⭐'; title='¡Muy bien! Vas por buen camino.'; msg='Tenés una base sólida. Repasá los puntos donde fallaste para llegar al 100%.'; }
+  else if (pct>=50) { char='📚'; title='Bien, pero hay cosas para mejorar.'; msg='Conocés lo básico. Vale repasar privacidad, derechos de autor e inclusión digital.'; }
+  else              { char='💪'; title='¡A estudiar se ha dicho!'; msg='Te recomendamos releer el material sobre ética digital docente. ¡La próxima lo rompés!'; }
+
+  document.getElementById('main-card').innerHTML = `
+    <div class="result">
+      <span class="result-char">${char}</span>
+      <div class="result-title">${title}</div>
+      <p class="result-msg">${msg}</p>
+      <div class="stats-row">
+        <div class="stat-card s-correct"><div class="stat-val">${score}</div><div class="stat-lbl">Correctas</div></div>
+        <div class="stat-card s-wrong"><div class="stat-val">${questions.length-score}</div><div class="stat-lbl">Incorrectas</div></div>
+        <div class="stat-card s-pct"><div class="stat-val">${pct}%</div><div class="stat-lbl">Puntaje</div></div>
+      </div>
+      <button class="btn-restart" onclick="restart()">🔄 Jugar de nuevo</button>
+    </div>`;
+}
+
+// ── RESTART ──────────────────────────────────────────────────────
+function restart() {
+  current = 0; score = 0; paused = false; overlayActive = false;
+  states = new Array(questions.length).fill(null);
+  document.getElementById('hero').style.display = 'block';
+  document.getElementById('progress-wrap').style.display = 'block';
+  document.getElementById('score-banner').style.display = 'flex';
+  document.getElementById('main-card').innerHTML = `
+    <div class="q-top"><div class="q-num" id="q-num">1</div><div class="q-category" id="q-cat"></div></div>
+    <div class="timer-row">
+      <div class="timer-bar-wrap"><div class="timer-bar" id="timer-bar"></div></div>
+      <div class="timer-label" id="timer-label">20s</div>
+      <button class="btn-pause" id="btn-pause" onclick="togglePause()">⏸ Pausar</button>
+    </div>
+    <div class="q-text" id="q-text"></div>
+    <div class="btn-row">
+      <button class="btn-tf" id="btn-v" onclick="check(true)"><span class="btn-icon">✅</span>Verdadero</button>
+      <button class="btn-tf" id="btn-f" onclick="check(false)"><span class="btn-icon">❌</span>Falso</button>
+    </div>
+    <div class="nav-row">
+      <button class="btn-nav" id="btn-prev" onclick="navigate(-1)">← Anterior</button>
+      <span class="nav-hint" id="nav-hint"></span>
+      <button class="btn-nav" id="btn-next" onclick="navigate(1)">Siguiente →</button>
+    </div>
+    <div class="feedback-area" id="feedback-area">
+      <div class="feedback-top" id="feedback-top"><span class="fb-icon" id="fb-icon"></span><span id="fb-text"></span></div>
+      <div class="sabias-que"><span class="sq-icon">💡</span><div><div class="sq-label">¿Sabías que...?</div><div class="sq-text" id="sq-text"></div></div></div>
+    </div>`;
+  render();
+}
+
+render();
+
+// ── MÚSICA MOTIVADORA ────────────────────────────────────────────
+let audioCtx=null,musicOn=false,musicNodes=[],musicTimeout=null;
+
+// Tempo: 160 BPM → beat = 0.375s
+const B=0.375, H=B/2, Q=B/4;
+
+// Melodía principal — estilo arcade/game show animado
+const MELODY=[
+  [659.25,H],[659.25,H],[659.25,H],[523.25,Q],[659.25,Q],
+  [783.99,B],[391.99,B],
+  [523.25,H*1.5],[391.99,Q],[329.63,H],[440,H],
+  [493.88,H],[523.25,B],[0,H],
+  [659.25,H],[659.25,H],[659.25,H],[523.25,Q],[659.25,Q],
+  [783.99,B*1.5],[0,H],
+  [880,Q],[783.99,Q],[698.46,Q],[659.25,H],
+  [415.3,Q],[440,Q],[523.25,H],[440,Q],[523.25,Q],[659.25,B],
+];
+
+// Contrapunto alegre (voz alta, square)
+const COUNTER=[
+  [1046.5,H],[987.77,H],[1046.5,H],[0,H],
+  [0,B],[1174.66,H],[1046.5,H],
+  [987.77,H],[0,H],[880,H],[987.77,H],
+  [1046.5,B],[0,B],
+  [1046.5,H],[987.77,H],[1046.5,H],[0,H],
+  [1174.66,B],[0,B],
+  [1318.5,Q],[1174.66,Q],[1046.5,Q],[987.77,H],
+  [0,Q],[880,Q],[987.77,H],[1046.5,Q],[987.77,Q],[880,B],
+];
+
+// Bajo pulsante
+const BASS=[
+  [130.81,H],[130.81,H],[164.81,H],[164.81,H],
+  [196,H],[196,H],[164.81,H],[164.81,H],
+  [130.81,H],[130.81,H],[146.83,H],[146.83,H],
+  [164.81,H],[164.81,H],[130.81,H],[130.81,H],
+];
+
+// Hi-hat & kick (frecuencias sintéticas)
+function playDrum(type,t,master){
+  const buf=audioCtx.createBuffer(1,audioCtx.sampleRate*0.08,audioCtx.sampleRate);
+  const d=buf.getChannelData(0);
+  if(type==='kick'){
+    for(let i=0;i<d.length;i++) d[i]=Math.sin(2*Math.PI*60*i/audioCtx.sampleRate)*Math.exp(-i/(audioCtx.sampleRate*0.05));
+  } else {
+    for(let i=0;i<d.length;i++) d[i]=(Math.random()*2-1)*Math.exp(-i/(audioCtx.sampleRate*0.015));
+  }
+  const src=audioCtx.createBufferSource();
+  const g=audioCtx.createGain();
+  src.buffer=buf;
+  g.gain.setValueAtTime(type==='kick'?0.4:0.12,t);
+  src.connect(g); g.connect(master);
+  src.start(t);
+}
+
+function scheduleBeats(startT, totalBeats, master){
+  for(let i=0;i<totalBeats;i++){
+    const t=startT+i*B;
+    playDrum('kick',t,master);
+    playDrum('hat',t+H,master);
+    playDrum('hat',t+H*0.5,master);
+    playDrum('hat',t+H*1.5,master);
+  }
+}
+
+function initAudio(){if(!audioCtx)audioCtx=new(window.AudioContext||window.webkitAudioContext)();}
+
+function playNote(f,t,d,v,tp,m){
+  if(f===0) return;
+  const o=audioCtx.createOscillator(),g=audioCtx.createGain();
+  o.type=tp; o.frequency.setValueAtTime(f,t);
+  g.gain.setValueAtTime(0,t);
+  g.gain.linearRampToValueAtTime(v,t+0.015);
+  g.gain.setValueAtTime(v,t+d*0.75);
+  g.gain.linearRampToValueAtTime(0,t+d*0.95);
+  o.connect(g); g.connect(m); o.start(t); o.stop(t+d+0.05);
+}
+
+function scheduleTrack(notes,t,v,tp,m){
+  let c=t; notes.forEach(([f,d])=>{playNote(f,c,d,v,tp,m);c+=d;}); return c-t;
+}
+
+function loopMusic(){
+  if(!musicOn||!audioCtx) return;
+  const master=audioCtx.createGain();
+  master.gain.setValueAtTime(0.9,audioCtx.currentTime);
+  master.connect(audioCtx.destination);
+  musicNodes.push(master);
+  const now=audioCtx.currentTime;
+  const dur=scheduleTrack(MELODY,now,0.22,'square',master);
+  scheduleTrack(COUNTER,now,0.10,'triangle',master);
+  scheduleTrack(BASS,now,0.18,'sawtooth',master);
+  scheduleBeats(now, Math.floor(dur/B), master);
+  musicTimeout=setTimeout(loopMusic,(dur-0.08)*1000);
+}
+
+function startMusic(){
+  initAudio();
+  if(audioCtx.state==='suspended') audioCtx.resume();
+  musicOn=true; loopMusic();
+  document.getElementById('music-btn').textContent='🎵 Música';
+}
+function stopMusic(){
+  musicOn=false; clearTimeout(musicTimeout);
+  musicNodes.forEach(n=>{try{n.disconnect();}catch(e){}});
+  musicNodes=[];
+  document.getElementById('music-btn').textContent='🔇 Música';
+}
+function toggleMusic(){if(musicOn)stopMusic();else startMusic();}
+</script>
+</body>
+</html>
